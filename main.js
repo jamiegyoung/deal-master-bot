@@ -43,36 +43,30 @@ function sendMessage(sub, channel, final) {
 
 function generateMessage(final) {
   db.all('SELECT * FROM humblechannel', (err, row) => {
-    if (err) {
-      console.log('No Channels Found');
-    } else {
-      row.forEach((channel) => {
-        let sub = '';
-        db.all('SELECT roleID FROM subscriberRoleID WHERE guildID = (?)', [channel.guildID], (subErr, subRow) => {
-          if (subErr || subRow.length === 0) {
-            sendMessage(sub, channel, final);
-          } else {
-            sub = `<@&${subRow[0].roleID}>`;
-            sendMessage(sub, channel, final);
-          }
-        });
+    if (err) throw err;
+    row.forEach((channel) => {
+      let sub = '';
+      db.all('SELECT roleID FROM subscriberRoleID WHERE guildID = (?)', [channel.guildID], (subErr, subRow) => {
+        if (subErr || subRow.length === 0) {
+          sendMessage(sub, channel, final);
+        } else {
+          sub = `<@&${subRow[0].roleID}>`;
+          sendMessage(sub, channel, final);
+        }
       });
-    }
+    });
   });
 }
 
 const ruleBundle = new schedule.RecurrenceRule();
-ruleBundle.minute = [0, 30];
+ruleBundle.minute = [0, 30]; // [0, 30]
 
 const jBundle = schedule.scheduleJob(ruleBundle, () => {
-  console.log('checking for new bundles');
   fetch('https://hr-humblebundle.appspot.com/androidapp/v2/service_check')
     .then(res => res.json())
     .then((res) => {
       db.all('SELECT * FROM humblebundle WHERE active = "true"', (err, row) => {
-        if (err || row.length === 0) {
-          console.log('None found in current database.');
-        } else {
+        if (!err && row.length !== 0) {
           const activeornot = [];
           for (let x = 0; x < row.length; x += 1) {
             for (let z = 0; z < res.length; z += 1) {
@@ -574,34 +568,3 @@ client.registerCommand(
 );
 
 client.connect();
-
-
-/*
-name: "Deal Commands:",
-value: *__$(deal / deals) (game name)__* **-**  Checks for any deals for the specified game.\n\n"
-+"*__$country__* **-** Checks country set for server. (Admins can use $setcountry (abbreviation) to set the country and thus the currency used.)\n\n"
-+"*__$steamdeals__* **-** Broken come back later. Toggles good steam deals.\n\n"
-+"*__$(subscribe/sub)__* **-** Adds the user to the selected subscribed role using $subscriberole. (see more using $admin)\n\n"
-+"*__$(unsubscribe/unsub)__* **-** Removes the user from the selected subscribed role using $subscriberole. (see more using $admin)\n"
-*/
-
-/*
-name: "Deal Master Administrator Commands:",
-value: "*__$(rolesubscribe / subscriberole / rolesub / subrole) (role)__* **-** Adds a role to be shouted at when a new bundle or monthly bundle is found.**\n"
-+"*__$(bundles / bundle) (on/off/check)__* **-** Adds a role to be shouted at when a new bundle or monthly bundle is found.**\n"
-+"*__$(humblemonthly / monthly) (on/off/check)__* **-** Adds a role to be shouted at when a new bundle or monthly bundle is found.**\n"
-+"*__$setcountry (Abbreviation. ie: EU, US, AU)__* **-** Sets the country and currency used for the $deals command on the server.\n"
-*/
-
-/*
-const getCurrencyCharForCountyCode = countyCode => {
-  const mapping = {
-    '$': ['US', 'CA', ...],
-    '€': ['UK', 'FR', ...],
-  };
-
-  return Object.entries(mapping)
-    .find(entry => entry[1].includes(countryCode))
-    .map(entry => entry[0];
-};
-*/
