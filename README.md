@@ -1,6 +1,7 @@
 
 
 ![](https://tokei.rs/b1/github/JamTheBean/Deal-Master-Bot)
+
 <img src="https://imgur.com/Kd069tt.png" height="200" />
 
 # Deal Master Bot
