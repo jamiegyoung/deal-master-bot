@@ -10,9 +10,11 @@ node_modules/
 npm-debug.log*
 
 yarn.lock
-*-backup.js
 *.db
 *.bat
 *.save.*
 *.save
 *-lock.json
+.elslintrc.json
+*.json
+.vscode

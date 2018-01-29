@@ -1,187 +1,607 @@
-const Discord = require('discord.js');
-const client = new Discord.Client();
-const fetch = require('node-fetch');
+const Eris = require('eris');
 const sqlite3 = require('sqlite3');
+const fetch = require('node-fetch');
+const login = require('./login.json');
+const bundleMessages = require('./bundlemessages.json');
+const escapeStringRegexp = require('escape-string-regexp');
+const schedule = require('node-schedule');
+
 const db = new sqlite3.Database('database.db');
 
-
-var eventDate = new Date();
-client.on('ready',() =>{
-    console.log('The bot is online: ' + eventDate);
+const client = new Eris.CommandClient(login.discord, {}, {
+  defaultHelpCommand: false,
+  description: 'A deal bot made by Jam',
+  owner: 'Jam',
+  prefix: '$',
 });
 
-function commandIs(str, msg){
-    return msg.content.toLowerCase().startsWith("$" + str);
+const embedColor = 15158332;
+const startDate = new Date();
+
+function sendMessage(sub, channel, final) {
+  client.createMessage(channel.channelID, {
+    embed: {
+      color: embedColor,
+      thumbnail: {
+        url: 'https://i.imgur.com/7Tr9b7e.png',
+        height: '333',
+        width: '2000',
+      },
+      description: sub,
+      fields: final,
+      footer: {
+        text: `You Can Find Out More At https://www.humblebundle.com`,
+      },
+      timestamp: new Date(),
+    },
+  });
 }
 
-client.on('message', message => {
-	if(message.channel.name){
-		if(message.channel.name.toLowerCase() == "deals" || message.channel.name.toLowerCase() == "gamedeals" ){
-			if(commandIs("deal", message || commandIs("deals",message))){
-				var args = message.content.replace('s ','');
-				var args = args.replace('$deal', '');
-				handleDeals(args,message);
-			} else if(commandIs("help",message)){
-				message.reply("\n***Command Key:*** $\n**Commands:**\n•$deals\n•$help\n•$setcountry\n•$country");
-			} else if(commandIs("setcountry",message)){
-				if(message.channel.name){
-					if(message.channel.name.toLowerCase() == "deals" || message.channel.name.toLowerCase() == "gamedeals" ){
-						var args = message.content.replace('$setcountry ','');
-						var args = args.toUpperCase();
-						db.all('SELECT * FROM currency WHERE server = (?)',[message.guild.id],(err,row) =>{
-							if(err || row.length === 0){
-								if(args.length === 2){
-									db.run('INSERT INTO currency values (?,?)', [message.guild.id, args],(err)=>{	
-										if(err === false){
-											message.reply("Error: Currency could not be saved");
-											console.log("could not insert server " + message.guild.id + " into the db");
-										} else{
-											message.reply("Successfully set the currency for the server `" + message.guild.name + "` to " + args);
-										}
-									});
-								} else{
-									message.reply("Error: Invalid country (e.g 'US', 'UK', 'EU')\nA simple list can be found here: http://sustainablesources.com/resources/country-abbreviations/\nIf an invalid country is selected, prices will default to the US");
-								}	
-							} else{
-								if(args.length === 2){
-									db.all('DELETE FROM currency WHERE server = (?)',[message.guild.id],(err,row) =>{
-										if(err === false){
-											message.reply("Error: Currency could not be changed");
-											console.log("could not remove previous records for the server: " + message.guild.id);
-										} else{
-											console.log("Successfully removed the previous records");
-											db.run('INSERT INTO currency values (?,?)', [message.guild.id, args],(err)=>{	
-												if(err === false){
-													message.reply("Error: Currency could not be saved");
-													console.log("could not insert server " + message.guild.id + " into the db");
-												} else{
-													message.reply("Successfully replaced the currency for the server `" + message.guild.name + "` to " + args);
-													console.log("replaced: " + message.guild.id);
-												}
-											});
-										}
-									});
-								} else{
-									message.reply("Error: Invalid country. Please select a country using the command $setcountry (country abbreviation) (e.g 'US', 'UK', 'EU')\nA simple list can be found here: http://sustainablesources.com/resources/country-abbreviations/\nIf an invalid country is selected, it will default to the US");
-								}
-							}
-						});
-					} else{
-						message.reply("Please Use This Command in The 'deals' channel or the 'gamedeals' channel");
-					}
-				} else{
-					message.reply("Plase Do Not PM This Bot, It is for server use only");
-				}		
-			} else if(commandIs("country",message)){
-				db.all('SELECT * FROM currency WHERE server = (?)',[message.guild.id],(err,row) =>{
-					if(err || row.length === 0){
-						message.reply("The server " + message.guild.name + " does not have a country assigned");
-					}
-					else{
-						message.reply("The server `" + message.guild.name + "` has the country " + row[0].currency + " assigned to it");
-					}
-				});
-			} else if(commandIs("getroles",message)){
-				console.log(message.author);
-			} else if(message.content.toLowerCase().startsWith("$")){
-				message.reply("Please use a valid command. Use `$help` for more information");
-			}
-		} else if(message.content.toLowerCase().startsWith("$")){
-			message.reply("Please Use This Command in The 'deals' channel or the 'gamedeals' channel");
-		}	
-	} else{
-	message.reply("Plase Do Not PM This Bot, It is for server use only");
-	}
+// author: {
+//   icon_url: client.user.staticAvatarURL,
+// }
+
+function generateMessage(final) {
+  db.all('SELECT * FROM humblechannel', (err, row) => {
+    if (err) {
+      console.log('No Channels Found');
+    } else {
+      row.forEach((channel) => {
+        let sub = '';
+        db.all('SELECT roleID FROM subscriberRoleID WHERE guildID = (?)', [channel.guildID], (subErr, subRow) => {
+          if (subErr || subRow.length === 0) {
+            sendMessage(sub, channel, final);
+          } else {
+            sub = `<@&${subRow[0].roleID}>`;
+            sendMessage(sub, channel, final);
+          }
+        });
+      });
+    }
+  });
+}
+
+const ruleBundle = new schedule.RecurrenceRule();
+ruleBundle.minute = [0, 30];
+
+const jBundle = schedule.scheduleJob(ruleBundle, () => {
+  console.log('checking for new bundles');
+  fetch('https://hr-humblebundle.appspot.com/androidapp/v2/service_check')
+    .then(res => res.json())
+    .then((res) => {
+      db.all('SELECT * FROM humblebundle WHERE active = "true"', (err, row) => {
+        if (err || row.length === 0) {
+          console.log('None found in current database.');
+        } else {
+          const activeornot = [];
+          for (let x = 0; x < row.length; x += 1) {
+            for (let z = 0; z < res.length; z += 1) {
+              if (row[x].bundle === res[z].bundle_machine_name) {
+                activeornot[x] = { active: true, bundle: row[x].bundle };
+                break;
+              } else {
+                activeornot[x] = { active: false, bundle: row[x].bundle };
+              }
+            }
+          }
+          activeornot.forEach((element) => {
+            if (element.active === false) {
+              db.all('UPDATE humblebundle SET active = "false" WHERE bundle=(?)', [element.bundle], (updateErr) => {
+                if (updateErr === false) {
+                  console.log(`The bundle ${element.bundle} could not be updated to false`);
+                }
+              });
+            }
+          });
+        }
+      });
+      const final = [];
+      let finalIndex = 0;
+      let requiredIndex = res.length;
+      let normal = 0;
+      res.forEach((resBundle) => {
+        db.all('SELECT * FROM humblebundle WHERE bundle = ?', [resBundle.bundle_machine_name], (err, row) => {
+          if (row.length === 0) {
+            db.run('INSERT INTO humblebundle (bundle, active) VALUES (?,"true")', [resBundle.bundle_machine_name], (insertErr) => {
+              if (insertErr === false) {
+                console.log('Error inserting bundle into the database');
+              } else if (!resBundle.url.includes('mobile')) {
+                const seed = Math.floor(Math.random() * bundleMessages.messages.length);
+                const randMessage = bundleMessages.messages[seed][0]
+                + escapeStringRegexp(resBundle.bundle_name)
+                + bundleMessages.messages[seed][1];
+                final[finalIndex] = {
+                  name: randMessage,
+                  value: `Click [Here](${resBundle.url}) To Find Out More!\n`,
+                };
+                normal += 1;
+                finalIndex += 1;
+                if (finalIndex === requiredIndex && normal !== 0) {
+                  generateMessage(final);
+                }
+              } else {
+                requiredIndex -= 1;
+                if (finalIndex === requiredIndex && normal !== 0) {
+                  generateMessage(final);
+                }
+              }
+            });
+          } else {
+            requiredIndex -= 1;
+            db.all('UPDATE humblebundle SET active = "true" WHERE bundle = (?)', [resBundle.bundle_machine_name], (updateErr) => {
+              if (updateErr === false) {
+                console.log('Error updating the bundle in the database');
+              }
+            });
+          }
+        });
+      });
+    });
 });
 
-	
-function handleDeals(args,message){
-	var game = args;
-	fetch('https://api.isthereanydeal.com/v02/game/plain/?key=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX&title=' + game)
-	.then(titleres => titleres.json())
-	.then(function(titleres){
-		game = titleres.data.plain;
-		if(game){
-			var currencychar = "";
-			db.all('SELECT currency FROM currency WHERE server = (?)',[message.guild.id],(err,row) =>{
-				if(err || row.length === 0){
-					message.reply("Error: Please select a country (e.g 'USD', 'GBP', 'EUR') using the command $setcountry (currency)");
-				} else{
-					var country = row[0].currency;
-					switch(country){
-						case "GB":
-							currencychar = "£";
-							break;
-						case "US": 
-							currencychar = "$";
-							break;
-						case "AD":
-						case "AT":
-						case "BE":
-						case "CY":
-						case "EE":
-						case "FI":
-						case "FR":
-						case "DE":
-						case "GR":
-						case "IE":
-						case "IT":
-						case "LV":
-						case "LT":
-						case "LU":
-						case "MT":
-						case "MC":
-						case "ME":
-						case "AN":
-						case "PT":
-						case "SM":
-						case "SK":
-						case "SI":
-						case "ES":
-						case "VA":
-							currencychar = "€";
-							break;
-						default:
-							currencychar = "";
-							break;
-					}
-					fetch('https://api.isthereanydeal.com/v01/game/prices//?key=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX&plains='+ game +'&country=' + country) //Is the api fucked? try and fix it! Possible fix = change to region
-					.then(res => res.json())
-					.then(res=>{
-					if(game !== false){
-						var final = "";
-						var amount
-						if(res.data[game].list.length > 5){
-							amount = 5
-						}
-						else{
-							amount = res.data[game].list.length;
-						}
-						for(x = 0; x < amount; x++){
-							if(res.data[game].list[x].price_cut !== 0){
-								final += "\n Store: " + res.data[game].list[x].shop.name;
-								final += "\n Old Price: " + currencychar + res.data[game].list[x].price_old;
-								final += "\n New Price: " + currencychar + res.data[game].list[x].price_new;
-								final += "\n -" + res.data[game].list[x].price_cut + "% Off";
-								final += "\n Link: " + res.data[game].list[x].url + "\n";	
-							} else if(x === 0){
-								final = "\n No Deals Found";
-								break;
-							}
-						}
-						message.reply(final);
-						var successDate = new Date();
-						console.log("Successfully retrieved on" + successDate);	
-						} else{
-							message.reply("Game Not Found")
-						}
-					});
-				}
-			});
-		} else{
-			return false;
-		}
-	})
-}
+const ruleMonthly = new schedule.RecurrenceRule();
+ruleMonthly.dayOfWeek = 5; // Set to 5
+ruleMonthly.hour = 17; // Set to 17
 
-client.login('XXXXXXXXXXXXXXXXXXXXXXXX.XXXXXX.XXXXXXXXXXXXX_XXXXXXXXXXXXX');
+const jMonthly = schedule.scheduleJob(ruleMonthly, () => {
+  const today = new Date();
+  if (today.getDate() <= 7) { // Must be 7
+    db.all('SELECT * FROM monthlychannel', (err, row) => {
+      if (err || row.length === 0) {
+        console.log('No Channels Found');
+      } else {
+        row.forEach((channel) => {
+          let sub = ``;
+          const final = [{
+            name: `The New Humble Monthly Bundle Has Arrived!`,
+            value: `Click [Here](https://www.humblebundle.com/monthly) For More Information!`,
+          }];
+          db.all('SELECT roleID FROM subscriberRoleID WHERE guildID = (?)', [channel.guildID], (selectErr, selectRow) => {
+            if (!selectErr) {
+              sub = `<@&${selectRow[0].roleID}>`; // where the error is occuring?
+              sendMessage(sub, channel, final);
+            } else {
+              sendMessage(sub, channel, final);
+            }
+          });
+        });
+      }
+    });
+  }
+});
+
+client.on('ready', () => {
+  console.log(`The bot is online: ${startDate}`);
+});
+
+
+// Deal command
+client.registerCommand('deal', (message, args) => {
+  const searchGame = args.join(' ');
+  fetch(`https://api.isthereanydeal.com/v02/game/plain/?key=${login.api.isthereanydeal}&title=${searchGame}`)
+    .then(titleres => titleres.json())
+    .then((titleres) => {
+      const game = titleres.data.plain;
+      if (game) {
+        let currencychar = '';
+        db.all('SELECT currency FROM currency WHERE server = (?)', [message.channel.guild.id], (err, row) => {
+          if (err || row.length === 0) {
+            message.channel.createMessage('Error: Please select a country (e.g "US", "UK", "EU") using the command $setcountry (currency)\nA simple list can be found here: http://sustainablesources.com/resources/country-abbreviations/\nIf an invalid country is selected, prices will default to the US\nIf your country\'s currency is not currently supported, give <@167850724976361472> a message with the country and currency not supported');
+          } else {
+            const country = row[0].currency;
+            switch (country) {
+              case 'UK':
+              case 'GB':
+                currencychar = '£';
+                break;
+              case 'US':
+                currencychar = '$';
+                break;
+              case 'AD':
+              case 'AT':
+              case 'BE':
+              case 'CY':
+              case 'EE':
+              case 'FI':
+              case 'FR':
+              case 'DE':
+              case 'GR':
+              case 'IE':
+              case 'IT':
+              case 'LV':
+              case 'LT':
+              case 'LU':
+              case 'MT':
+              case 'MC':
+              case 'ME':
+              case 'AN':
+              case 'PT':
+              case 'SM':
+              case 'SK':
+              case 'SI':
+              case 'ES':
+              case 'VA':
+                currencychar = '€';
+                break;
+              default:
+                currencychar = '$';
+                break;
+            }
+            fetch(`https://api.isthereanydeal.com/v01/game/prices//?key=${login.api.isthereanydeal}&plains=${game}&country=${country}`)
+              .then(res => res.json())
+              .then((res) => {
+                if (res.data[game].list.length !== 0) {
+                  let amount;
+                  if (res.data[game].list.length > 5) {
+                    amount = 5;
+                  } else {
+                    amount = res.data[game].list.length;
+                  }
+                  let newAmt = 0;
+                  let looperr = false;
+                  const final = []; // Could cause error, fuck you eslint
+                  for (let x = 0; x < amount; x += 1) {
+                    if (res.data[game].list[x].price_cut !== 0) {
+                      final[x] = {
+                        name: escapeStringRegexp(res.data[game].list[x].shop.name),
+                        url: escapeStringRegexp(res.data[game].list[x].url),
+                        value: `**Price: **${currencychar}${res.data[game].list[x].price_new} ~~${currencychar}${res.data[game].list[x].price_old}~~\n**${res.data[game].list[x].price_cut}% Off**\n**[Link](${res.data[game].list[x].url})**`,
+                      };
+                      newAmt += 1;
+                    } else if (x === 0) {
+                      looperr = true;
+                      break;
+                    }
+                  }
+                  if (looperr === true) {
+                    message.channel.createMessage('No Deals Found');
+                  } else { // Single quotes or the trailing comma could cause an error here.
+                    message.channel.createMessage({
+                      embed: {
+                        color: embedColor,
+                        thumbnail: {
+                          url: 'https://i.imgur.com/G7aw3BJ.jpg',
+                        },
+                        author: {
+                          name: `${newAmt} Deals Found:`,
+                          icon_url: client.user.staticAvatarURL,
+                        },
+                        fields: final,
+                        timestamp: new Date(),
+                      },
+                    });
+                  }
+                } else {
+                  message.channel.createMessage('Game Not Found');
+                }
+              });
+          }
+        });
+      } else {
+        message.channel.createMessage('Game Not Found');
+      }
+    });
+}, {
+  desription: 'Find Deals',
+  fullDescription: 'Type the game name after the command and find deals!',
+  caseInsensitive: true,
+  argsRequired: true,
+  guildOnly: true,
+});
+
+// Alias for the deal command
+client.registerCommandAlias('deals', 'deal', {
+  caseInsensitive: false,
+});
+
+// set country for the deal command and potentially for future integrations (stored in sql db)
+client.registerCommand('setcountry', (message, rawArgs) => {
+  const notFound = 'Error: Invalid country (e.g "US", "UK", "EU")\nA simple list can be found here: http://sustainablesources.com/resources/country-abbreviations/\nIf an invalid country is selected, prices will default to the US\nIf your country\'s currency is not currently supported, give <@167850724976361472> a message with the country and currency not supported';
+  const args = rawArgs[0].toUpperCase();
+  db.all('SELECT * FROM currency WHERE server = (?)', [message.channel.guild.id], (selectErr, row) => {
+    if (selectErr || row.length === 0) {
+      if (args.length === 2) {
+        db.run('INSERT INTO currency (server, currency) values (?,?)', [message.channel.guild.id, args], (insertErr) => {
+          if (insertErr === false) {
+            message.channel.createMessage('Error: Currency could not be saved');
+            console.log(`could not insert server ${message.channel.guild.id} into the db`);
+          } else {
+            message.channel.createMessage(`Successfully set the currency for the server ${message.channel.guild.name} to ${args}`);
+          }
+        });
+      } else {
+        message.channel.createMessage(notFound);
+      }
+    } else if (args.length === 2) {
+      db.all('UPDATE currency SET currency=(?) WHERE server=(?)', [args, message.channel.guild.id], (err) => {
+        if (err === false) {
+          message.channel.createMessage('Error: Currency could not be changed');
+          console.log(`could not remove previous records for the server: ${message.channel.guild.id}`);
+        } else {
+          message.channel.createMessage(`Successfully replaced the currency for the server \`${message.channel.guild.name}\` to \`${args}\``);
+        }
+      });
+    } else {
+      message.channel.createMessage(notFound);
+    }
+  });
+}, {
+  requirements: {
+    permissions: { administrator: true },
+  },
+  desription: 'Set Country',
+  fullDescription: 'Set the country using the abbreviation',
+  caseInsensitive: true,
+  argsRequired: true,
+  guildOnly: true,
+});
+// :Thinking: admin may require quotes
+// Checks country
+client.registerCommand('country', (message) => {
+  db.all('SELECT * FROM currency WHERE server = (?)', [message.channel.guild.id], (err, row) => {
+    if (err || row.length === 0) {
+      message.channel.createMessage(`The server ${message.channel.guild.name} does not have a country assigned`);
+    } else {
+      message.channel.createMessage(`The server \`${message.channel.guild.name}\` has the country ${row[0].currency} assigned to it`);
+    }
+  });
+}, {
+  desription: 'Show Country',
+  fullDescription: 'Shows the country assigned to the guild',
+  caseInsensitive: true,
+  guildOnly: true,
+});
+
+// Humble Bundle
+
+client.registerCommand('subscribe', (message) => {
+  message.addReaction('⏱');
+  db.all('SELECT roleID FROM subscriberRoleID WHERE guildID = (?)', [message.channel.guild.id], (err, row) => {
+    if (err || row.length === 0) {
+      message.removeReaction('⏱');
+      message.addReaction('❎');
+      message.channel.createMessage('Please subscribe a role first before subscribing using $rolesubscribe');
+    } else {
+      message.member.addRole(row[0].roleID);
+      message.removeReaction('⏱');
+      message.addReaction('👌');
+    }
+  });
+});
+
+client.registerCommandAlias('sub', 'subscribe');
+
+client.registerCommand('unsubscribe', (message) => {
+  message.addReaction('⏱');
+  db.all('SELECT roleID FROM subscriberRoleID WHERE guildID = (?)', [message.channel.guild.id], (err, row) => {
+    if (err || row.length === 0) {
+      // If there is no role for that guild
+    } else {
+      let found = false;
+      for (let x = 0; x < message.member.roles.length; x += 1) {
+        if (message.member.roles[x] === row[0].roleID) {
+          found = true;
+          message.member.removeRole(row[0].roleID);
+          message.removeReaction('⏱');
+          message.addReaction('👌');
+          break;
+        }
+      }
+      if (found === false) {
+        message.removeReaction('⏱');
+        message.addReaction('❎');
+      }
+    }
+  });
+  // removeRole
+});
+
+client.registerCommandAlias('unsub', 'unsubscribe');
+
+client.registerCommand('rolesubscribe', (message, args) => {
+  const role = message.channel.guild.roles.find(r => r.name === args[0]);
+  if (role) {
+    const roleID = role.id;
+    const roleName = role.name;
+    db.all('SELECT roleID FROM subscriberRoleID WHERE guildID = (?)', [message.channel.guild.id], (err, row) => {
+      if (err || row.length === 0) {
+        db.run('INSERT INTO subscriberRoleID (guildID,roleID) values (?,?)', [message.channel.guild.id, roleID], (insertErr) => {
+          if (insertErr) {
+            console.log('error on inserting into subscriberRoleID');
+          } else {
+            message.channel.createMessage(`Successfully Subscribed The Role \`${roleName}\` To Humble Bundle Notifications!`);
+          }
+        });
+      } else {
+        db.all('UPDATE subscriberRoleID SET roleID=(?) WHERE guildID=(?)', [roleID, message.channel.guild.id], (updateErr) => {
+          if (updateErr) {
+            console.log('error on updating subscribeRoleID');
+          } else {
+            message.channel.createMessage(`Updated Subscribed Role To ${roleName}, Previous Subscribers Will Have To Resubscribe`);
+          }
+        });
+      }
+    });
+    message.channel.createMessage(`<@&${roleID}>`);
+  } else {
+    message.channel.createMessage(`There is no role called ${args.join(' ')} (warning case-sensitive)`);
+  }
+}, {
+  requirements: {
+    permissions: { administrator: true },
+  },
+  desription: 'Set Subscribed Role',
+  caseInsensitive: false,
+  argsRequired: true,
+  guildOnly: true,
+});
+
+client.registerCommandAlias('rolesub', 'rolesubscribe');
+
+client.registerCommand('roleunsubscribe', (message) => {
+  db.all('SELECT roleID FROM subscriberRoleID WHERE guildID = (?)', [message.channel.guild.id], (err, row) => {
+    if (err || row.length === 0) {
+      message.channel.createMessage('No Role Is Subscribed On This Server');
+    } else {
+      db.run('DELETE FROM subscriberRoleID WHERE guildID = ?', [message.channel.guild.id], (deleteErr) => {
+        if (deleteErr) {
+          console.log('error deleting from subscriberRoleID');
+        } else {
+          message.channel.createMessage('Successfully Unsubscribed');
+        }
+      });
+    }
+  });
+}, {
+  requirements: {
+    permissions: { administrator: true },
+  },
+  desription: 'Unsubscribe Role',
+  caseInsensitive: true,
+  guildOnly: true,
+});
+
+client.registerCommandAlias('roleunsub', 'roleunsubscribe');
+client.registerCommandAlias('unsubrole', 'roleunsubscribe');
+client.registerCommandAlias('unsubscriberole', 'roleunsubscribe');
+
+
+client.registerCommand('bundles', (message, args) => {
+  if (args.length === 0 || args[0] === 'check') {
+    db.all('SELECT channelID FROM humblechannel WHERE channelID = (?)', [message.channel.id], (err, row) => {
+      if (err || row.length === 0) {
+        message.channel.createMessage('Bundle Notifications Are Currently Off For this Channel!');
+      } else {
+        message.channel.createMessage('Bundles Notifications Are Currently On For This Channel!');
+      }
+    });
+  } else if (args[0] === 'on') {
+    db.all('SELECT channelID FROM humblechannel WHERE channelID = (?)', [message.channel.id], (err, row) => {
+      if (err || row.length === 0) {
+        db.run('INSERT INTO humblechannel (channelID,guildID) VALUES (?,?)', [message.channel.id, message.channel.guild.id], (insertErr) => {
+          if (insertErr) {
+            console.log('error on insertion to humblechannel');
+          } else {
+            message.channel.createMessage('Started Bundle Notifications!');
+          }
+        });
+      } else {
+        message.channel.createMessage('Bundle Notifications Are Already On For This Channel!');
+      }
+    });
+  } else if (args[0] === 'off') {
+    db.run('DELETE FROM humblechannel WHERE channelID = ?', [message.channel.id], (err) => {
+      if (err) {
+        message.channel.createMessage('Bundle Notifications Are Already Off For This Channel!');
+      } else {
+        message.channel.createMessage('Stopped Bundle Notifications');
+      }
+    });
+  }
+}, {
+  requirements: {
+    permissions: { administrator: true },
+  },
+  desription: 'Bundles',
+  caseInsensitive: true,
+  guildOnly: true,
+});
+client.registerCommandAlias('bundle', 'bundles');
+
+client.registerCommand('humblemonthly', (message, args) => {
+  if (args.length === 0 || args[0] === 'check') {
+    db.all('SELECT channelID FROM monthlychannel WHERE channelID = (?)', [message.channel.id], (err, row) => {
+      if (err || row.length === 0) {
+        message.channel.createMessage('Humble Monthly Notifications Are Currently Off For This Channel!');
+      } else {
+        message.channel.createMessage('Humble Monthly Notifications Are Currently On For This Channel!');
+      }
+    });
+  } else if (args[0] === 'on') {
+    db.all('SELECT channelID FROM monthlychannel WHERE channelID = (?)', [message.channel.id], (err, row) => {
+      if (err || row.length === 0) {
+        db.run('INSERT INTO monthlychannel (channelID, guildID) VALUES (?,?)', [message.channel.id, message.channel.guild.id], (insertErr) => {
+          if (insertErr) {
+            console.log('error on insertion to monthlychannel');
+          } else {
+            message.channel.createMessage('Started Humble Monthly Bundle Notifications!');
+          }
+        });
+      } else {
+        message.channel.createMessage('Humble Monthly Notifications Are Already On For This Channel!');
+      }
+    });
+  } else if (args[0] === 'off') {
+    db.run('DELETE FROM monthlychannel WHERE channelID = ?', [message.channel.id], (err) => {
+      if (err) {
+        message.channel.createMessage('Humble Monthly Bundle Notifications Are Already Off For This Channel');
+      } else {
+        message.channel.createMessage('Stopped Humble Monthly Bundle Motifications');
+      }
+    });
+  }
+}, {
+  requirements: {
+    permissions: { administrator: true },
+  },
+  desription: 'Humble Monthly',
+  caseInsensitive: true,
+  guildOnly: true,
+});
+client.registerCommandAlias('monthly', 'humblemonthly');
+
+client.registerCommand(
+  'prune', (message, args) => {
+    const parsed = parseInt(args, 10);
+    let amount = parsed;
+    if (Number.isNaN(amount)) {
+      amount = 100;
+    }
+    message.channel.getMessages(amount + 1)
+      .then((res) => {
+        for (let x = 1; x < res.length; x += 1) {
+          message.channel.deleteMessage(res[x].id);
+        }
+        message.delete();
+      });
+  },
+  {
+    requirements: {
+      permissions: { administrator: true },
+    },
+    caseInsensitive: true,
+  },
+);
+
+client.connect();
+
+
+/*
+name: "Deal Commands:",
+value: *__$(deal / deals) (game name)__* **-**  Checks for any deals for the specified game.\n\n"
++"*__$country__* **-** Checks country set for server. (Admins can use $setcountry (abbreviation) to set the country and thus the currency used.)\n\n"
++"*__$steamdeals__* **-** Broken come back later. Toggles good steam deals.\n\n"
++"*__$(subscribe/sub)__* **-** Adds the user to the selected subscribed role using $subscriberole. (see more using $admin)\n\n"
++"*__$(unsubscribe/unsub)__* **-** Removes the user from the selected subscribed role using $subscriberole. (see more using $admin)\n"
+*/
+
+/*
+name: "Deal Master Administrator Commands:",
+value: "*__$(rolesubscribe / subscriberole / rolesub / subrole) (role)__* **-** Adds a role to be shouted at when a new bundle or monthly bundle is found.**\n"
++"*__$(bundles / bundle) (on/off/check)__* **-** Adds a role to be shouted at when a new bundle or monthly bundle is found.**\n"
++"*__$(humblemonthly / monthly) (on/off/check)__* **-** Adds a role to be shouted at when a new bundle or monthly bundle is found.**\n"
++"*__$setcountry (Abbreviation. ie: EU, US, AU)__* **-** Sets the country and currency used for the $deals command on the server.\n"
+*/
+
+/*
+const getCurrencyCharForCountyCode = countyCode => {
+  const mapping = {
+    '$': ['US', 'CA', ...],
+    '€': ['UK', 'FR', ...],
+  };
+
+  return Object.entries(mapping)
+    .find(entry => entry[1].includes(countryCode))
+    .map(entry => entry[0];
+};
+*/
