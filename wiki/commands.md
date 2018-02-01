@@ -16,4 +16,4 @@ Requires  **[Jam Insert Permission Here]** permissions
 | `$setcountry [country abbreviation]`|Sets what currency the server will be using (find them all <a href="http://sustainablesources.com/resources/country-abbreviations/" target="_blank">here</a>) |`$setcountry UK`|
 |`$rolesubscribe / $rolesub / $subscriberole / $subrole [role]`|Sets the role to notify for both humble bundle and humble monthly updates, please note, do not `@` the role as that is currently not supported|`$rolesub Subscribers`|
 |`$bundle(s) [on, check, off]`|Enables bundle notifications for the channel that this command is peformed in|`$bundles on`|
-|`$monthly / $humblemonthly [on, check, off]`|Enables humble monthly notifications for the channel that this command is preformed in|`$monthly on`|
+|`$monthly / $humblemonthly [on, check, off]`|Enables humble monthly notifications for the channel that this command is performed in|`$monthly on`|
