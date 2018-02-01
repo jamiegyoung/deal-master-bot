@@ -1,4 +1,4 @@
-Discord bots can be tricky to set up sometimes. I've spent countless hours going through command lists and settings to attempt to figure out how to **begin** setting up a bot. Trying to find what commands are needed, trying to find settings to change and what i can enable, or just trying to figure out what permissions the bot needs (or what permissions i need for some commands). Keeping all of the struggle i have had setting up bots in mind, I (Blankz_) will attempt to make a guide that goes over how to add Deal Master Bot to your server, What commands you **need** to activate, and some commands that **may** interest you. Hopefully i will be able to do that and not lose you on the way, but, if you do get lost feel free to pm me or Jam (Programmer) on discord and we can help you out! Tags at the bottom.
+Discord bots can be tricky to set up sometimes. I've spent countless hours going through command lists and settings to attempt to figure out how to **begin** setting up a bot. Trying to find what commands are needed, trying to find settings to change and what i can enable, or just trying to figure out what permissions the bot needs (or what permissions I need for some commands). Keeping all of the struggle I have had setting up bots in mind, I (Blankz_) will attempt to make a guide that goes over how to add Deal Master Bot to your server, what commands you **need** to activate, and some commands that **may** interest you. Hopefully I will be able to do that and not lose you on the way, but if you do get lost, feel free to PM me or Jam (developer) on discord and we can help you out! Tags at the bottom.
 
 ## Adding Deal Master Bot to your discord server
 First, Make sure you have the "Manage Server" permission on the server. 
@@ -19,9 +19,9 @@ To check this:
 
 ----------
 
-Since you are still reading i am assuming you have the permissions to invite the bot to your server, so lets get on with it shall we? 
+Since you are still reading I am assuming you have the permissions to invite the bot to your server, so lets get on with it shall we? 
 
-To invite the bot to your server you have to click [This link](https://discordapp.com/oauth2/authorize?client_id=345511200454606850&scope=bot&permissions=268725320)
+To invite the bot to your server you have to click [**this link**](https://discordapp.com/oauth2/authorize?client_id=345511200454606850&scope=bot&permissions=268725320)
 
 This will lead you to a page showing the bot name, a box asking which server you wish to add he bot to (along with every server you have the permission to add the bot to), and a menu with permissions for the bot.
 ![Bot Invite Window](https://i.imgur.com/nnA3BVN.png)
@@ -35,11 +35,12 @@ You need to set a country for the bot to know what type of currency to give you.
 
 You can set your country by typing `$setcountry [country abbreviation]`in chat. 
 For a list of country abbreviations, click [this link](http://sustainablesources.com/resources/country-abbreviations/)
+Note: If your country is not supported, give Jam a pm and he will implement it.
 
 ![Showing The Set Country Command](https://i.imgur.com/NWqMoMd.png)
 
 ## Setting up Bundle / Monthly Notifications
-These commands will set up the bot's automatic Humble Bundle and Humble Monthly announcements.
+These commands will set up the bot's automatic Humble Bundle and Humble Monthly announcements if you want them.
 
 ![Showing The Bundle Notifications In Action](https://i.imgur.com/Fhs0beA.png)
 
@@ -79,7 +80,7 @@ ____
 
 Guide writer: Hapax#8903 (aka Blankz_)
 
-Programmer: Jam#0001 (aka a guy who bought discord nitro for that sweet #, oh and he also made the bot... /shrug)
+: Jam#0001 (aka a guy who bought discord nitro for that sweet #, oh and he also made the bot... /shrug)
 
 
 
