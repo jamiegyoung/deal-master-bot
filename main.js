@@ -248,8 +248,10 @@ client.registerCommand('deal', (message, args) => {
                     }
                   }
                   if (looperr === true) {
-                    message.channel.createMessage('No Deals Found');
+                    message.channel.createMessage('No Deals Found'); // 1 Deal = Deals
                   } else { // Single quotes or the trailing comma could cause an error here.
+                    let preAmt = 'Deals';
+                    if (newAmt === 1) preAmt = 'Deal';
                     message.channel.createMessage({
                       embed: {
                         color: embedColor,
@@ -257,7 +259,7 @@ client.registerCommand('deal', (message, args) => {
                           url: 'https://i.imgur.com/G7aw3BJ.jpg',
                         },
                         author: {
-                          name: `${newAmt} Deals Found:`,
+                          name: `${newAmt} ${preAmt} Found:`,
                           icon_url: client.user.staticAvatarURL,
                         },
                         fields: final,
