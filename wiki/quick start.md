@@ -1,3 +1,5 @@
+# Deal Master Bot quick start guide
+
 Discord bots can be tricky to set up sometimes. I've spent countless hours going through command lists and settings to attempt to figure out how to **begin** setting up a bot. Trying to find what commands are needed, trying to find settings to change and what I can enable, or just trying to figure out what permissions the bot needs (or what permissions I need for some commands). Keeping all of the struggle I have had setting up bots in mind, I (Blankz_) will attempt to make a guide that goes over how to add Deal Master Bot to your server, what commands you **need** to activate, and some commands that **may** interest you. Hopefully I will be able to do that and not lose you on the way, but if you do get lost, feel free to PM me or Jam (developer) on discord and we can help you out! Tags at the bottom.
 
 ## Adding Deal Master Bot to your discord server
