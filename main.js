@@ -451,6 +451,8 @@ client.registerCommand('rolesubscribe', (message, args) => {
 });
 
 client.registerCommandAlias('rolesub', 'rolesubscribe');
+client.registerCommandAlias('subrole', 'rolesubscribe');
+client.registerCommandAlias('subscriberole', 'rolesubscribe');
 
 client.registerCommand('roleunsubscribe', (message) => {
   db.all('SELECT roleID FROM subscriberRoleID WHERE guildID = (?)', [message.channel.guild.id], (err, row) => {
