@@ -15,6 +15,8 @@ const client = new Eris.CommandClient(login.discord, {}, {
   prefix: '$',
 });
 
+client.connect();
+
 const embedColor = 15158332;
 const startDate = new Date();
 
@@ -135,7 +137,9 @@ const jBundle = schedule.scheduleJob(ruleBundle, () => {
 
 const ruleMonthly = new schedule.RecurrenceRule();
 ruleMonthly.dayOfWeek = 5; // Set to 5
-ruleMonthly.hour = 17; // Set to 17
+ruleMonthly.hour = 18; // Set to 18
+ruleMonthly.minute = 0; // 0
+
 
 const jMonthly = schedule.scheduleJob(ruleMonthly, () => {
   const today = new Date();
@@ -151,10 +155,10 @@ const jMonthly = schedule.scheduleJob(ruleMonthly, () => {
             value: `Click [Here](https://www.humblebundle.com/monthly) For More Information!`,
           }];
           db.all('SELECT roleID FROM subscriberRoleID WHERE guildID = (?)', [channel.guildID], (selectErr, selectRow) => {
-            if (!selectErr) {
-              sub = `<@&${selectRow[0].roleID}>`; // where the error is occuring?
+            if (selectRow.length === 0) { // where the error is occuring?
               sendMessage(sub, channel, final);
             } else {
+              sub = `<@&${selectRow[0].roleID}>`;
               sendMessage(sub, channel, final);
             }
           });
@@ -355,12 +359,19 @@ client.registerCommand('subscribe', (message) => {
   db.all('SELECT roleID FROM subscriberRoleID WHERE guildID = (?)', [message.channel.guild.id], (err, row) => {
     if (err || row.length === 0) {
       message.removeReaction('⏱');
-      message.addReaction('❎');
+      message.addReaction('👎');
       message.channel.createMessage('Please subscribe a role first before subscribing using $rolesubscribe');
     } else {
-      message.member.addRole(row[0].roleID);
-      message.removeReaction('⏱');
-      message.addReaction('👌');
+      message.member.addRole(row[0].roleID)
+        .then(() => {
+          message.removeReaction('⏱');
+          message.addReaction('👌');
+        })
+        .catch(() => {
+          message.removeReaction('⏱');
+          message.addReaction('👎');
+          // message.channel.createMessage('Unsuccessful! I am too weak!');
+        });
     }
   });
 });
@@ -377,15 +388,22 @@ client.registerCommand('unsubscribe', (message) => {
       for (let x = 0; x < message.member.roles.length; x += 1) {
         if (message.member.roles[x] === row[0].roleID) {
           found = true;
-          message.member.removeRole(row[0].roleID);
-          message.removeReaction('⏱');
-          message.addReaction('👌');
+          message.member.removeRole(row[0].roleID)
+            .then(() => {
+              message.removeReaction('⏱');
+              message.addReaction('👌');
+            })
+            .catch(() => {
+              message.removeReaction('⏱');
+              message.addReaction('👎');
+              message.channel.createMessage('Unsuccessful! I am too weak!');
+            });
           break;
         }
       }
       if (found === false) {
         message.removeReaction('⏱');
-        message.addReaction('❎');
+        message.addReaction('👎');
       }
     }
   });
@@ -548,6 +566,7 @@ client.registerCommandAlias('monthly', 'humblemonthly');
 
 client.registerCommand(
   'prune', (message, args) => {
+    message.addReaction('⏱');
     const parsed = parseInt(args, 10);
     let amount = parsed;
     if (Number.isNaN(amount)) {
@@ -556,7 +575,12 @@ client.registerCommand(
     message.channel.getMessages(amount + 1)
       .then((res) => {
         for (let x = 1; x < res.length; x += 1) {
-          message.channel.deleteMessage(res[x].id);
+          message.channel.deleteMessage(res[x].id)
+            .catch(() => {
+              message.removeReaction('⏱');
+              message.addReaction('👎');
+              message.channel.createMessage('Unsuccessful! I am too weak!');
+            });
         }
         message.delete();
       });
@@ -568,5 +592,3 @@ client.registerCommand(
     caseInsensitive: true,
   },
 );
-
-client.connect();
