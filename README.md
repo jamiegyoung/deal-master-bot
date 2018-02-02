@@ -12,7 +12,7 @@ The deal master bot is a discord bot to check for deals and notifiy selected use
 ## Installing / Getting started
 >How do I get this magical bot working!?!?!?!
 
-![**Here is a guide on how to get the bot setup!**](https://github.com/jamiegyoung/deal-master-bot/blob/master/wiki/quick%20start.md)
+[**Here is a guide on how to get the bot setup!**](https://github.com/jamiegyoung/deal-master-bot/blob/master/wiki/quick%20start.md)
 
 Then you select the server you wish to add the bot to and click Authorize, confirm you're not a bot and then it will be added to your server!
 
