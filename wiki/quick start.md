@@ -83,7 +83,7 @@ This role will be mentioned whenever a new bundle is out.
 
 ## Extended Commands List
 
-Check out [**insert link**] for a full list of commands!
+Check out [**this link**](https://github.com/jamiegyoung/deal-master-bot/blob/master/wiki/commands.md) for a full list of commands!
 
 ## That's all, folks!
 
