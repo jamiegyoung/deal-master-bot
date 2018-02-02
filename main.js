@@ -39,10 +39,6 @@ function sendMessage(sub, channel, final) {
   });
 }
 
-// author: {
-//   icon_url: client.user.staticAvatarURL,
-// }
-
 function generateMessage(final) {
   db.all('SELECT * FROM humblechannel', (err, row) => {
     if (err) throw err;
@@ -155,7 +151,7 @@ const jMonthly = schedule.scheduleJob(ruleMonthly, () => {
             value: `Click [Here](https://www.humblebundle.com/monthly) For More Information!`,
           }];
           db.all('SELECT roleID FROM subscriberRoleID WHERE guildID = (?)', [channel.guildID], (selectErr, selectRow) => {
-            if (selectRow.length === 0) { // where the error is occuring?
+            if (selectRow.length === 0) {
               sendMessage(sub, channel, final);
             } else {
               sub = `<@&${selectRow[0].roleID}>`;
@@ -172,8 +168,6 @@ client.on('ready', () => {
   console.log(`The bot is online: ${startDate}`);
 });
 
-
-// Deal command
 client.registerCommand('deal', (message, args) => {
   const searchGame = args.join(' ');
   fetch(`https://api.isthereanydeal.com/v02/game/plain/?key=${login.api.isthereanydeal}&title=${searchGame}`)
@@ -237,7 +231,7 @@ client.registerCommand('deal', (message, args) => {
                   }
                   let newAmt = 0;
                   let looperr = false;
-                  const final = []; // Could cause error, fuck you eslint
+                  const final = [];
                   for (let x = 0; x < amount; x += 1) {
                     if (res.data[game].list[x].price_cut !== 0) {
                       final[x] = {
@@ -252,8 +246,8 @@ client.registerCommand('deal', (message, args) => {
                     }
                   }
                   if (looperr === true) {
-                    message.channel.createMessage('No Deals Found'); // 1 Deal = Deals
-                  } else { // Single quotes or the trailing comma could cause an error here.
+                    message.channel.createMessage('No Deals Found');
+                  } else {
                     let preAmt = 'Deals';
                     if (newAmt === 1) preAmt = 'Deal';
                     message.channel.createMessage({
@@ -289,12 +283,10 @@ client.registerCommand('deal', (message, args) => {
   guildOnly: true,
 });
 
-// Alias for the deal command
 client.registerCommandAlias('deals', 'deal', {
   caseInsensitive: false,
 });
 
-// set country for the deal command and potentially for future integrations (stored in sql db)
 client.registerCommand('setcountry', (message, rawArgs) => {
   const notFound = 'Error: Invalid country (e.g "US", "UK", "EU")\nA simple list can be found here: http://sustainablesources.com/resources/country-abbreviations/\nIf an invalid country is selected, prices will default to the US\nIf your country\'s currency is not currently supported, give <@167850724976361472> a message with the country and currency not supported';
   const args = rawArgs[0].toUpperCase();
@@ -335,8 +327,7 @@ client.registerCommand('setcountry', (message, rawArgs) => {
   argsRequired: true,
   guildOnly: true,
 });
-// :Thinking: admin may require quotes
-// Checks country
+
 client.registerCommand('country', (message) => {
   db.all('SELECT * FROM currency WHERE server = (?)', [message.channel.guild.id], (err, row) => {
     if (err || row.length === 0) {
@@ -351,8 +342,6 @@ client.registerCommand('country', (message) => {
   caseInsensitive: true,
   guildOnly: true,
 });
-
-// Humble Bundle
 
 client.registerCommand('subscribe', (message) => {
   message.addReaction('⏱');
@@ -370,7 +359,7 @@ client.registerCommand('subscribe', (message) => {
         .catch(() => {
           message.removeReaction('⏱');
           message.addReaction('👎');
-          // message.channel.createMessage('Unsuccessful! I am too weak!');
+          message.channel.createMessage('Unsuccessful! I am too weak!');
         });
     }
   });
@@ -381,9 +370,7 @@ client.registerCommandAlias('sub', 'subscribe');
 client.registerCommand('unsubscribe', (message) => {
   message.addReaction('⏱');
   db.all('SELECT roleID FROM subscriberRoleID WHERE guildID = (?)', [message.channel.guild.id], (err, row) => {
-    if (err || row.length === 0) {
-      // If there is no role for that guild
-    } else {
+    if (!err && row.length !== 0) {
       let found = false;
       for (let x = 0; x < message.member.roles.length; x += 1) {
         if (message.member.roles[x] === row[0].roleID) {
@@ -404,10 +391,10 @@ client.registerCommand('unsubscribe', (message) => {
       if (found === false) {
         message.removeReaction('⏱');
         message.addReaction('👎');
+        message.channel.createMessage('You do not have any role to unsubscribe from!');
       }
     }
   });
-  // removeRole
 });
 
 client.registerCommandAlias('unsub', 'unsubscribe');
