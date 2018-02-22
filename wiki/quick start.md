@@ -24,7 +24,7 @@ To check this:
 
 Since you are still reading I am assuming you have the permissions to invite the bot to your server, so lets get on with it shall we? 
 
-To invite the bot to your server you have to click [**this link**](https://discordapp.com/oauth2/authorize?client_id=345511200454606850&scope=bot&permissions=268725320)
+To invite the bot to your server you have to click [**this link**](https://discordapp.com/oauth2/authorize?client_id=345511200454606850&scope=bot&permissions=268528712)
 
 This will lead you to a page showing the bot name, a box asking which server you wish to add the bot to (along with every server you have the permission to add the bot to), and a menu with permissions for the bot.
 ![Bot Invite Window](https://i.imgur.com/nnA3BVN.png)
