@@ -5,12 +5,12 @@
 <img src="https://imgur.com/Kd069tt.png" height="200" />
 
 # Deal Master Bot
-> The heck?
+> What is deal master bot?
  
 The deal master bot is a discord bot to check for deals and notifiy selected users about bundles.
 
 ## Installing / Getting started
->How do I get this magical bot working!?!?!?!
+>How do I get the bot up and running?
 
 [**Here is a guide on how to get the bot setup!**](https://github.com/jamiegyoung/deal-master-bot/blob/master/wiki/quick%20start.md)
 
