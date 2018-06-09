@@ -42,4 +42,7 @@ After this there are several commands that you should perform to setup the bot f
 |`$bundle(s) [on, check, off]`|Enables bundle notifications for the channel that this command is peformed in|`$bundles on`|
 |`$monthly / $humblemonthly [on, check, off]`|Enables humble monthly notifications for the channel that this command is peformed in|`$monthly on`|
 |`$chrono [on, check, off]`|Enables Chrono.gg Daily notifications for the channel that this command is peformed in|`$chrono on`|
+<<<<<<< HEAD
+>>>>>>> bcd02b2590621dabeed156f759443e08156cb73e
+=======
 >>>>>>> bcd02b2590621dabeed156f759443e08156cb73e
