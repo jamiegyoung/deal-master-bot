@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "discord.js": "^11.2.1",
     "eris": "^0.8.3",
     "escape-string-regexp": "^1.0.5",
     "node-fetch": "^1.7.3",

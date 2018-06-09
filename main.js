@@ -20,7 +20,7 @@ client.connect();
 const embedColor = 15158332;
 const startDate = new Date();
 
-function sendHumbleMessage(sub, channel, final) {
+function sendMessage(sub, channel, final) {
   client.createMessage(channel.channelID, {
     embed: {
       color: embedColor,
@@ -36,170 +36,28 @@ function sendHumbleMessage(sub, channel, final) {
       },
       timestamp: new Date(),
     },
-  })
-    .catch((err) => {
-      db.run('DELETE FROM humblechannel WHERE channelID = ?', [channel.channelID], (delErr) => {
-        if (delErr) throw err;
-      });
-      db.run('DELETE FROM monthlychannel WHERE channelID = ?', [channel.channelID], (delErr) => {
-        if (delErr) throw err;
-      });
-    });
+  });
 }
 
-function generateHumbleBundleMessage(final) {
+function generateMessage(final) {
   db.all('SELECT * FROM humblechannel', (err, row) => {
     if (err) throw err;
     row.forEach((channel) => {
       let sub = '';
       db.all('SELECT roleID FROM subscriberRoleID WHERE guildID = (?)', [channel.guildID], (subErr, subRow) => {
         if (subErr || subRow.length === 0) {
-          sendHumbleMessage(sub, channel, final);
+          sendMessage(sub, channel, final);
         } else {
           sub = `<@&${subRow[0].roleID}>`;
-          sendHumbleMessage(sub, channel, final);
+          sendMessage(sub, channel, final);
         }
       });
-    });
-  });
-}
-
-function sendChronoMessage(sub, channel, final, imageURL) {
-  client.createMessage(channel.channelID, {
-    embed: {
-      color: embedColor,
-      image: {
-        url: imageURL,
-      },
-      description: sub,
-      fields: final,
-      footer: {
-        text: `You Can Find Out More At https://chrono.gg`,
-      },
-      timestamp: new Date(),
-    },
-  })
-    .catch((err) => {
-      db.run('DELETE FROM humblechannel WHERE channelID = ?', [channel.channelID], (delErr) => {
-        if (delErr) throw err;
-      });
-      db.run('DELETE FROM monthlychannel WHERE channelID = ?', [channel.channelID], (delErr) => {
-        if (delErr) throw err;
-      });
-    });
-}
-
-function generateChronoMessage(final, imageURL) {
-  db.all('SELECT * FROM chronochannel', (err, row) => {
-    if (err) throw err;
-    row.forEach((channel) => {
-      let sub = '';
-      db.all('SELECT roleID FROM subscriberRoleID WHERE guildID = (?)', [channel.guildID], (subErr, subRow) => {
-        if (subErr || subRow.length === 0) {
-          sendChronoMessage(sub, channel, final, imageURL);
-        } else {
-          sub = `<@&${subRow[0].roleID}>`;
-          sendChronoMessage(sub, channel, final, imageURL);
-        }
-      });
-    });
-  });
-}
-
-function GetChronoAppDetails(callback) {
-  fetch('https://api.chrono.gg/sale')
-    .then(chronoRes => chronoRes.json())
-    .then((chronoRes) => {
-      callback(
-        null,
-        chronoRes.items[0].id,
-        chronoRes.name,
-        chronoRes.unique_url,
-        chronoRes.promo_image,
-        chronoRes.normal_price,
-        chronoRes.discount,
-        chronoRes.sale_price,
-      );
-    })
-    .catch(() => {
-      callback(true);
-    });
-}
-
-function GetShortGameDescription(appID, callback) {
-  fetch(`https://store.steampowered.com/api/appdetails?appids=${appID}`)
-    .then(steamRes => steamRes.json())
-    .then((steamRes) => {
-      callback(steamRes[appID].data.short_description);
-    })
-    .catch(() => {
-      callback(false);
-    });
-}
-
-function GetChronoDeal() {
-  GetChronoAppDetails((err, appID, appName, appURL, imageURL, normalPrice, discount, salePrice) => {
-    if (err) return;
-    db.run('INSERT INTO chronodeals VALUES (?, ?, "true")', [appID, appName], (insertErr) => {
-      if (!insertErr) {
-        GetShortGameDescription(appID, (appDescription) => {
-          if (appDescription === false) return;
-          const final = [
-            {
-              name: `Chrono.gg's Daily Deal: ${escapeStringRegexp(appName)}`,
-              value: `${appDescription}\n**Price** **$${salePrice}** ~~$${normalPrice}~~\n**${discount} Off**\nClick [Here](${appURL}) To Find Out More!\n`,
-            },
-          ];
-          generateChronoMessage(final, imageURL);
-        });
-        return;
-      }
-      if (insertErr) throw insertErr;
-    });
-  });
-}
-
-const ruleChrono = new schedule.RecurrenceRule();
-ruleChrono.minute = 5;
-
-const jChrono = schedule.scheduleJob(ruleChrono, () => {
-  db.all('SELECT appid FROM chronodeals WHERE active = "true"', (selectErr, row) => {
-    if (selectErr || row.length === 0) {
-      GetChronoDeal();
-      return;
-    }
-    GetChronoAppDetails((err, appID) => {
-      if (err) return;
-      if (row[0].appid !== appID) {
-        db.run('UPDATE chronodeals SET active = "false" WHERE appid = (?)', [row[0].appid], (updateErr) => {
-          if (updateErr) throw updateErr;
-          GetChronoDeal();
-        });
-      }
-    });
-  });
-});
-
-function tempChronoTrigger() {
-  db.all('SELECT appid FROM chronodeals WHERE active = "true"', (selectErr, row) => {
-    if (selectErr || row.length === 0) {
-      GetChronoDeal();
-      return;
-    }
-    GetChronoAppDetails((err, appID) => {
-      if (err) throw err;
-      if (row[0].appid !== appID) {
-        db.run('UPDATE chronodeals SET active = "false" WHERE appid = (?)', [row[0].appid], (updateErr) => {
-          if (updateErr) throw updateErr;
-          GetChronoDeal();
-        });
-      }
     });
   });
 }
 
 const ruleBundle = new schedule.RecurrenceRule();
-ruleBundle.minute = [0, 30];
+ruleBundle.minute = [0, 30]; // [0, 30]
 
 const jBundle = schedule.scheduleJob(ruleBundle, () => {
   fetch('https://hr-humblebundle.appspot.com/androidapp/v2/service_check')
@@ -251,12 +109,12 @@ const jBundle = schedule.scheduleJob(ruleBundle, () => {
                 normal += 1;
                 finalIndex += 1;
                 if (finalIndex === requiredIndex && normal !== 0) {
-                  generateHumbleBundleMessage(final);
+                  generateMessage(final);
                 }
               } else {
                 requiredIndex -= 1;
                 if (finalIndex === requiredIndex && normal !== 0) {
-                  generateHumbleBundleMessage(final);
+                  generateMessage(final);
                 }
               }
             });
@@ -272,7 +130,6 @@ const jBundle = schedule.scheduleJob(ruleBundle, () => {
       });
     });
 });
-
 
 const ruleMonthly = new schedule.RecurrenceRule();
 ruleMonthly.dayOfWeek = 5; // Set to 5
@@ -295,10 +152,10 @@ const jMonthly = schedule.scheduleJob(ruleMonthly, () => {
           }];
           db.all('SELECT roleID FROM subscriberRoleID WHERE guildID = (?)', [channel.guildID], (selectErr, selectRow) => {
             if (selectRow.length === 0) {
-              sendHumbleMessage(sub, channel, final);
+              sendMessage(sub, channel, final);
             } else {
               sub = `<@&${selectRow[0].roleID}>`;
-              sendHumbleMessage(sub, channel, final);
+              sendMessage(sub, channel, final);
             }
           });
         });
@@ -486,28 +343,26 @@ client.registerCommand('country', (message) => {
   guildOnly: true,
 });
 
-client.registerCommand('subscribe', (message, args) => {
-  if (args.length === 0) {
-    message.addReaction('⏱');
-    db.all('SELECT roleID FROM subscriberRoleID WHERE guildID = (?)', [message.channel.guild.id], (err, row) => {
-      if (err || row.length === 0) {
-        message.removeReaction('⏱');
-        message.addReaction('👎');
-        message.channel.createMessage('Please subscribe a role first before subscribing using $rolesubscribe');
-      } else {
-        message.member.addRole(row[0].roleID)
-          .then(() => {
-            message.removeReaction('⏱');
-            message.addReaction('👌');
-          })
-          .catch(() => {
-            message.removeReaction('⏱');
-            message.addReaction('👎');
-            message.channel.createMessage('Unsuccessful! I am too weak!');
-          });
-      }
-    });
-  }
+client.registerCommand('subscribe', (message) => {
+  message.addReaction('⏱');
+  db.all('SELECT roleID FROM subscriberRoleID WHERE guildID = (?)', [message.channel.guild.id], (err, row) => {
+    if (err || row.length === 0) {
+      message.removeReaction('⏱');
+      message.addReaction('👎');
+      message.channel.createMessage('Please subscribe a role first before subscribing using $rolesubscribe');
+    } else {
+      message.member.addRole(row[0].roleID)
+        .then(() => {
+          message.removeReaction('⏱');
+          message.addReaction('👌');
+        })
+        .catch(() => {
+          message.removeReaction('⏱');
+          message.addReaction('👎');
+          message.channel.createMessage('Unsuccessful! I am too weak!');
+        });
+    }
+  });
 });
 
 client.registerCommandAlias('sub', 'subscribe');
@@ -545,12 +400,7 @@ client.registerCommand('unsubscribe', (message) => {
 client.registerCommandAlias('unsub', 'unsubscribe');
 
 client.registerCommand('rolesubscribe', (message, args) => {
-  // const role = message.channel.guild.roles.find(r => r.name === args[0]);
-  let checkingRole = args[0];
-  if (args[0].startsWith('<@&') && args[0].endsWith('>')) {
-    checkingRole = args[0].substring(3, args[0].length - 1);
-  }
-  const role = message.channel.guild.roles.find(r => r.name === checkingRole || r.id === checkingRole);
+  const role = message.channel.guild.roles.find(r => r.name === args[0]);
   if (role) {
     const roleID = role.id;
     const roleName = role.name;
@@ -586,6 +436,7 @@ client.registerCommand('rolesubscribe', (message, args) => {
   argsRequired: true,
   guildOnly: true,
 });
+
 client.registerCommandAlias('rolesub', 'rolesubscribe');
 client.registerCommandAlias('subrole', 'rolesubscribe');
 client.registerCommandAlias('subscriberole', 'rolesubscribe');
@@ -622,9 +473,9 @@ client.registerCommand('bundles', (message, args) => {
   if (args.length === 0 || args[0] === 'check') {
     db.all('SELECT channelID FROM humblechannel WHERE channelID = (?)', [message.channel.id], (err, row) => {
       if (err || row.length === 0) {
-        message.channel.createMessage('Humble Bundle Notifications Are Currently Off For this Channel!');
+        message.channel.createMessage('Bundle Notifications Are Currently Off For this Channel!');
       } else {
-        message.channel.createMessage('Humble Bundles Notifications Are Currently On For This Channel!');
+        message.channel.createMessage('Bundles Notifications Are Currently On For This Channel!');
       }
     });
   } else if (args[0] === 'on') {
@@ -658,8 +509,6 @@ client.registerCommand('bundles', (message, args) => {
   caseInsensitive: true,
   guildOnly: true,
 });
-client.registerCommandAlias('humble', 'bundles');
-client.registerCommandAlias('humblebundle', 'bundles');
 client.registerCommandAlias('bundle', 'bundles');
 
 client.registerCommand('humblemonthly', (message, args) => {
@@ -704,70 +553,26 @@ client.registerCommand('humblemonthly', (message, args) => {
 });
 client.registerCommandAlias('monthly', 'humblemonthly');
 
-client.registerCommand('chrono', (message, args) => {
-  if (args.length === 0 || args[0] === 'check') {
-    db.all('SELECT channelID FROM chronochannel WHERE channelID = (?)', [message.channel.id], (err, row) => {
-      if (err || row.length === 0) {
-        message.channel.createMessage('Chrono Daily Deal Notifications Are Currently Off For this Channel!');
-      } else {
-        message.channel.createMessage('Chrono Daily Deal Notifications Are Currently On For This Channel!');
-      }
-    });
-  } else if (args[0] === 'on') {
-    db.all('SELECT channelID FROM chronochannel WHERE channelID = (?)', [message.channel.id], (err, row) => {
-      if (err || row.length === 0) {
-        db.run('INSERT INTO chronochannel (channelID,guildID) VALUES (?,?)', [message.channel.id, message.channel.guild.id], (insertErr) => {
-          if (insertErr) {
-            console.log('error on insertion to chronochannel');
-          } else {
-            message.channel.createMessage('Started Chrono Notifications!');
-          }
-        });
-      } else {
-        message.channel.createMessage('Chrono Notifications Are Already On For This Channel!');
-      }
-    });
-  } else if (args[0] === 'off') {
-    db.run('DELETE FROM chronochannel WHERE channelID = ?', [message.channel.id], (err) => {
-      if (err) {
-        message.channel.createMessage('Chrono Notifications Are Already Off For This Channel!');
-      } else {
-        message.channel.createMessage('Stopped Chrono Notifications');
-      }
-    });
-  }
-}, {
-  requirements: {
-    permissions: { administrator: true },
-  },
-  desription: 'Chrono',
-  caseInsensitive: true,
-  guildOnly: true,
-});
-
-function deleteMessages(message, amount) {
-  message.channel.getMessages(amount + 1)
-    .then((res) => {
-      for (let x = 1; x < res.length; x += 1) {
-        message.channel.deleteMessage(res[x].id)
-          .catch(() => false);
-      }
-      message.delete();
-    });
-}
-
 client.registerCommand(
   'prune', (message, args) => {
-    if (args.length === 0) {
-      message.addReaction('⏱');
-      deleteMessages(message, 100);
-      return;
+    message.addReaction('⏱');
+    const parsed = parseInt(args, 10);
+    let amount = parsed;
+    if (Number.isNaN(amount)) {
+      amount = 100;
     }
-    const parsed = parseInt(args[0], 10);
-    if (!Number.isNaN(parsed)) {
-      message.addReaction('⏱');
-      deleteMessages(message, parsed);
-    }
+    message.channel.getMessages(amount + 1)
+      .then((res) => {
+        for (let x = 1; x < res.length; x += 1) {
+          message.channel.deleteMessage(res[x].id)
+            .catch(() => {
+              message.removeReaction('⏱');
+              message.addReaction('👎');
+              message.channel.createMessage('Unsuccessful! I am too weak!');
+            });
+        }
+        message.delete();
+      });
   },
   {
     requirements: {
@@ -776,19 +581,3 @@ client.registerCommand(
     caseInsensitive: true,
   },
 );
-
-client.registerCommand('uptime', (message, args) => {
-  if (args.length === 0) {
-    const uptimeDate = new Date();
-    const timeDiff = Math.abs(uptimeDate.getTime() - startDate.getTime());
-    const diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
-    const after = () => {
-      if (diffDays === 1) return "day";
-      return "days";
-    };
-    message.channel.createMessage(`The bot has been up for ${diffDays} ${after()}`);
-  }
-}, {
-  caseInsensitive: true,
-});
-
