@@ -19,7 +19,7 @@ After this there are several commands that you should perform to setup the bot f
 
 
 ## General Commands
->How do I use this thing!?!?!?!?
+>How do I use this thing?
 
 | Command | Description |Example
 | --- | --- | ---|
@@ -29,7 +29,7 @@ After this there are several commands that you should perform to setup the bot f
 |`$unsubscribe / $unsub`|Unsubscribes the user from notifications|`$unsubscribe`|
 
 ## Setup / Admin Only Commands
->How do I setup this thing?!?!?!?
+>How do I setup this thing?
 
 | Command | Description |Example
 | --- | --- | ---|
