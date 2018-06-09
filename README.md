@@ -16,7 +16,6 @@ The deal master bot is a discord bot to check for deals and notifiy selected use
 
 Then you select the server you wish to add the bot to and click Authorize, confirm you're not a bot and then it will be added to your server!
 
-<<<<<<< HEAD
 After this there are several commands that you should perform to setup the bot for your server found on the <a href="https://github.com/jamiegyoung/deal-master-bot/blob/master/wiki/commands.md" target="_blank">wiki</a>.
 =======
 After this there are several commands that you should perform to setup the bot for your server.
@@ -42,7 +41,3 @@ After this there are several commands that you should perform to setup the bot f
 |`$bundle(s) [on, check, off]`|Enables bundle notifications for the channel that this command is peformed in|`$bundles on`|
 |`$monthly / $humblemonthly [on, check, off]`|Enables humble monthly notifications for the channel that this command is peformed in|`$monthly on`|
 |`$chrono [on, check, off]`|Enables Chrono.gg Daily notifications for the channel that this command is peformed in|`$chrono on`|
-<<<<<<< HEAD
->>>>>>> bcd02b2590621dabeed156f759443e08156cb73e
-=======
->>>>>>> bcd02b2590621dabeed156f759443e08156cb73e
