@@ -70,14 +70,15 @@ The bot will automatically send the messages **in the channel you put the comman
 
 This role will be mentioned whenever a new bundle is out.
  1. Make or pick a role to be mentioned ( I recommend a @Subscribers role)
- 2. Type `$rolesub [role name]` 
+ 2. Make sure the bot's role is **Higher** than the subscription role in the role list
+ 3. Type `$rolesub [role name]` 
  
  **Note: Do not mention the role, just type the role name. The bot will not find the role if you mention it.**
  This is a bug, Jam knows about it and is working on it as we speak.
  
 ![Showing RoleSub Command](https://i.imgur.com/AZFyMIL.png)
  
- 3. Type `$sub` to have the role added to you
+ 4. Type `$sub` to have the role added to you
 
 ![Sub Command Demonstration](https://thumbs.gfycat.com/LiquidEuphoricJackrabbit-size_restricted.gif) 
 
