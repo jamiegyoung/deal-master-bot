@@ -27,7 +27,7 @@ module.exports = {
 
 
     const helpEmbed = new MessageEmbed()
-      .setTitle('Help!')
+      .setTitle('Help has arrived!')
       .setColor('#E74C3C')
       .setAuthor(message.client.user.username, message.client.user.displayAvatarURL())
       .addFields(commandInfo)
