@@ -25,6 +25,7 @@ module.exports = {
       value: `${cmd.description}`
     }));
 
+
     const helpEmbed = new MessageEmbed()
       .setTitle('Help!')
       .setColor('#E74C3C')
