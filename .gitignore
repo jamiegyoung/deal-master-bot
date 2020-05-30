@@ -16,5 +16,5 @@ yarn.lock
 *.save
 *-lock.json
 .elslintrc.json
-*.json
 .vscode
+configs

@@ -1,6 +1,3 @@
-# Deal Master Bot 2 Soon<sup>TM<sup>
-I vow to fix this absolute mess of a project sometime this summer
-
 ![](https://tokei.rs/b1/github/JamTheBean/Deal-Master-Bot)
 
 <img src="https://imgur.com/Kd069tt.png" height="200" />
