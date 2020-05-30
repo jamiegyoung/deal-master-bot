@@ -4,7 +4,7 @@ const { admins } = require('../configs/discord.json');
 module.exports = {
   name: 'reload',
   description: 'Reloads a command',
-  aliases: ['refresh', 'r', 'asd', 'basd'],
+  aliases: ['refresh', 'r'],
   execute(message, args) {
     console.log(`${admins} + ${message.author.id}`)
     if (!admins.includes(message.author.id)) return message.channel.send(`You aren't able to do that! ${message.author}`);
