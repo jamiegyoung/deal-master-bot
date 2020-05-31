@@ -5,6 +5,7 @@ module.exports = {
   name: 'reload',
   description: 'Reloads a command',
   aliases: ['refresh', 'r'],
+  arguments: ['command(s)'],
   execute(message, args) {
     if (!admins.includes(message.author.id)) return message.channel.send(`You aren't able to do that! ${message.author}`);
     if (!args.length) return message.channel.send(`You didn' pass a command to reload, ${message.author}`);
