@@ -1,10 +1,10 @@
+const { prefix, token } = require('./configs/discord.json');
 const fs = require('fs');
 const Discord = require('discord.js');
-const { prefix, token } = require('./configs/discord.json');
 
 const client = new Discord.Client();
 
-/**
+/*
  * Dynamically setup commands from commands folder
  */
 const setupCommands = () => {
@@ -12,7 +12,8 @@ const setupCommands = () => {
     .filter(file => file.endsWith('.js'));
 
   for (const file of commandFiles) {
-    const command = require(`./commands/${file}`);
+    const Command = require(`./commands/${file}`);
+    const command = new Command();
     client.commands.set(command.name, command); // could cuase issue
   }
 };

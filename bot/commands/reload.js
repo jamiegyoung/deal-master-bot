@@ -1,30 +1,36 @@
 const fs = require('fs');
 const { admins } = require('../configs/discord.json');
+const Command = require('../src/Command');
 
-module.exports = {
-  name: 'reload',
-  description: 'Reloads a command',
-  aliases: ['refresh', 'r'],
-  arguments: ['command(s)'],
-  execute(message, args) {
-    if (!admins.includes(message.author.id)) return message.channel.send(`You aren't able to do that! ${message.author}`);
-    if (!args.length) return message.channel.send(`You didn' pass a command to reload, ${message.author}`);
+class Reload extends Command {
+  constructor() {
+    super('reload', 'Reloads a command');
+    super.aliases = ['refresh', 'r'];
+    super.arguments = ['command(s)'];
+    this.execute = (message, args) => {
+      if (!admins.includes(message.author.id)) return message.channel.send(`You aren't able to do that! ${message.author}`);
+      if (!args.length) return message.channel.send(`You didn' pass a command to reload, ${message.author}`);
+  
+      for (const command of args) {
+        const commandFiles = fs.readdirSync('./commands')
+          .filter(file => file.endsWith('.js'))
+          .map(command => command.slice(0, -3));
+  
+        if (!commandFiles.includes(command)) return message.channel.send(`Command "${command}" does not exist`);
 
-    for (const command of args) {
-      const commandFiles = fs.readdirSync('./commands')
-        .filter(file => file.endsWith('.js'))
-        .map(command => command.slice(0, -3));
-
-      if (!commandFiles.includes(command)) return message.channel.send(`Command "${command}" does not exist`);
-      delete require.cache[require.resolve(`./${command}.js`)];
-
-      try {
-        const newCommand = require(`./${command}.js`);
-        message.client.commands.set(newCommand.name, newCommand);
-        return message.channel.send('Successfully reloaded command');
-      } catch (error) {
-        return message.channel.send(`There was an error when reloading the command ${command.name}`);
+        
+        try {
+          delete require.cache[require.resolve(`./${command}.js`)];
+          const Command = require(`./${command}.js`);
+          const newCommand = new Command();
+          message.client.commands.set(newCommand.name, newCommand);
+          return message.channel.send('Successfully reloaded command');
+        } catch (error) {
+          return message.channel.send(`There was an error when reloading the command ${command.name}`);
+        }
       }
-    }
-  },
-};
+    };
+  }
+}
+
+module.exports = Reload;
