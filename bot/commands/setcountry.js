@@ -7,6 +7,7 @@ class Ping extends Command {
     super('setcountry', 'Sets what country/currency that channel will be using');
     super.arguments = ['country'];
     super.channelTypes = ['text'];
+    super.arguments = ['administrator'];
 
     this.execute = async (message, args) => {
       if (!args.length) return message.channel.send('This command takes one argument, use $help for more information');

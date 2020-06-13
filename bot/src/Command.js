@@ -6,6 +6,8 @@ class Command {
     // Below prevents errors if checking length or includes in main
     this.aliases = [];
     this.arguments = [];
+
+    // See all permissions here https://discord.com/developers/docs/topics/permissions
     this.permissions = [];
 
     // important channel types: dm, text
