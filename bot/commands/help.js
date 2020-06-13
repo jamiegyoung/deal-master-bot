@@ -31,6 +31,13 @@ class Help extends Command {
         .setDescription(getInfo);
   
       message.author.send(helpEmbed);
+
+      // Attempt to delete the initial message
+      try {
+        if (message.deletable) message.delete();
+      } catch (error) {
+        message.channel.send('Unable to delete a message, please change permissions!');
+      }
     };
   }
 } 

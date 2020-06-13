@@ -4,12 +4,17 @@
   "description": "A bot that gives deals to discord users",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node main.js"
   },
   "author": "Jamie Young",
   "license": "ISC",
   "dependencies": {
-    "discord.js": "^12.2.0"
+    "discord.js": "^12.2.0",
+    "i": "^0.3.6",
+    "mongo-sanitize": "^1.1.0",
+    "mongodb": "^3.5.8",
+    "node-fetch": "^2.6.0"
   },
   "devDependencies": {
     "eslint": "^7.1.0"
