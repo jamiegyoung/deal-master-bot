@@ -11,7 +11,6 @@
   "license": "ISC",
   "dependencies": {
     "discord.js": "^12.2.0",
-    "i": "^0.3.6",
     "mongo-sanitize": "^1.1.0",
     "mongodb": "^3.5.8",
     "node-fetch": "^2.6.0"
