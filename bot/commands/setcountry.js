@@ -2,12 +2,12 @@ const Command = require('../src/Command');
 const db = require('../src/db');
 
 // TODO: Add list of countries
-class Ping extends Command {
+class SetCountry extends Command {
   constructor() {
     super('setcountry', 'Sets what country/currency that channel will be using');
     super.arguments = ['country'];
     super.channelTypes = ['text'];
-    super.arguments = ['administrator'];
+    super.permissions = ['administrator'];
 
     this.execute = async (message, args) => {
       if (!args.length) return message.channel.send('This command takes one argument, use $help for more information');
@@ -23,4 +23,4 @@ class Ping extends Command {
   }
 }
 
-module.exports = Ping;
+module.exports = SetCountry;

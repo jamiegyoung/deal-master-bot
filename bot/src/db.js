@@ -52,4 +52,3 @@ mongoClient.connect()
       }
     };
   });
-
