@@ -8,7 +8,7 @@ class Command {
     this.arguments = [];
 
     // See all permissions here https://discord.com/developers/docs/topics/permissions
-    this.permissions = [];
+    this.isAdministrator = true;
 
     // important channel types: dm, text
     this.channelTypes = ['dm', 'text'];

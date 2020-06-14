@@ -13,7 +13,10 @@ const setupCommands = () => {
   for (const file of commandFiles) {
     const Command = require(`./commands/${file}`);
     const command = new Command();
-    client.commands.set(command.name, command);
+    client.commands.set(command.name, {
+      type: Command,
+      command
+    });
     console.log(`$${command.name} added`);
   }
 };
@@ -24,23 +27,29 @@ client.on('message', message => {
 
   const args = message.content.slice(prefix.length).split(' ');
   const commandName = args.shift().toLowerCase();
+  if (!commandName) return;
 
   // Check for commands and look through aliases
   const command = client.commands.get(commandName)
-    || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
+    || client.commands.find(cmd => cmd.command.aliases && cmd.command.aliases.includes(commandName));
+
 
   if (!command) return message.reply('Command does not exist');
 
   // Check if the channel type is allowed for the command
-  if (!command.channelTypes.includes(message.channel.type)) return message.channel.send('You cannot use that command in this channel!');
+  if (!command.command.channelTypes.includes(message.channel.type)) return message.channel.send('You cannot use that command in this channel!');
 
-  // Attempt to see if the user has the permission
-  if (!command.permissions.length) return command.execute(message, args);
+  // See if the user has the permission to perform the command
+  if (!command.command.isAdministrator) return command.type.execute(message, args);
 
-  for (const permission of command.permissions) {
-    if (!message.guild.member(message.author).hasPermission(permission.toUpperCase()))
-      message.channel.send(`${message.author}, you do not have the permissions to do that`);
+  if (message.channel.type === 'dm') console.error('Cannot be channel type dm and require administrator privileges');
+  
+  if (message.channel.type === 'text') {
+    if (!message.guild.member(message.author).hasPermission('ADMINISTRATOR'))
+    return message.channel.send(`${message.author}, you do not have the permissions to do that`);
   }
+
+  command.type.execute(message, args);
 });
 
 client.login(token);
