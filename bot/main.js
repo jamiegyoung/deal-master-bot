@@ -17,7 +17,7 @@ const setupCommands = () => {
       type: Command,
       command
     });
-    console.log(`$${command.name} added`);
+    console.log(`${prefix}${command.name} added`);
   }
 };
 
