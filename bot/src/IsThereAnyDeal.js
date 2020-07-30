@@ -1,4 +1,5 @@
 const { apiKey } = require('../configs/isthereanydeal.json');
+const { prefix } = require('./configs/discord.json');
 const fetch = require('node-fetch');
 // const db = require('../src/db');
 const currencies = require('../configs/currency.json');
@@ -27,7 +28,7 @@ deal.getDeal = async (gameName, country) => {
 
     const currencyChar = currencies[country];
     if (!currencyChar) return {
-      err: 'No country set, use the $setcountry command to set one! For more information use $help setcountry.'
+      err: `No country set, use the ${prefix}setcountry command to set one! For more information use $help setcountry.`
     };
 
     if (!dealList.length) return {

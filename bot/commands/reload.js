@@ -1,5 +1,5 @@
 const fs = require('fs');
-const { admins } = require('../configs/discord.json');
+const { admins, prefix } = require('../configs/discord.json');
 const Command = require('../src/Command');
 
 class Reload extends Command {
@@ -27,7 +27,7 @@ class Reload extends Command {
         const Command = require(`./${command}.js`);
         const newCommand = new Command();
         message.client.commands.set(newCommand.name, newCommand);
-        console.log(`Successfully reloaded $${newCommand.name}`);
+        console.log(`Successfully reloaded ${prefix}${newCommand.name}`);
         return message.channel.send('Successfully reloaded command');
       } catch (error) {
         return message.channel.send(`There was an error when reloading the command ${command.name}`);

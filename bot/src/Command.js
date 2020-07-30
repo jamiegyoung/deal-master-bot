@@ -1,4 +1,4 @@
-const prefix = require('./configs/discord.json');
+const { prefix } = require('./configs/discord.json');
 class Command {
   constructor(name, description) {
     this.name = name;
