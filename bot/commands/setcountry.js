@@ -1,6 +1,6 @@
 const Command = require('../src/Command');
 const db = require('../src/db');
-
+const { prefix } = require('./configs/discord.json');
 // TODO: Add list of countries
 class SetCountry extends Command {
   constructor() {
@@ -10,8 +10,8 @@ class SetCountry extends Command {
   }
 
   static async execute (message, args) {
-    if (!args.length) return message.channel.send('This command takes one argument, use $help for more information');
-    if (args.length > 1) return message.channel.send('This command only takes one argument, use $help for more information');
+    if (!args.length) return message.channel.send(`This command takes one argument, use ${prefix}help for more information`);
+    if (args.length > 1) return message.channel.send(`This command only takes one argument, use ${prefix}help for more information`);
     if (args[0].length > 2) return message.channel.send('Please enter a valid country code!');
     
     const currentCountry = await db.getCountry(message.channel.id);

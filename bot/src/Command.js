@@ -1,3 +1,4 @@
+const { prefix } = require('./configs/discord.json');
 class Command {
   constructor(name, description) {
     this.name = name;
@@ -15,9 +16,9 @@ class Command {
   }
 
   get commandInfo() {
-    const aliases = this.aliases.length ? this.aliases.reduce((aliasString, alias) => `${aliasString} / $${alias}`) : false;
+    const aliases = this.aliases.length ? this.aliases.reduce((aliasString, alias) => `${aliasString} / ${prefix}${alias}`) : false;
     const args = this.arguments.length ? this.arguments.reduce((argumentsString, argument) => `${argumentsString}, ${argument.toLowerCase()}`) : false;
-    const command = aliases ? `\`$${this.name} ${args}\` or *$${aliases}*` : `\`$${this.name} ${args}\``;
+    const command = aliases ? `\`${prefix}${this.name} ${args}\` or *${prefix}${aliases}*` : `\`${prefix}${this.name} ${args}\``;
     return `${command.trim()}\n${this.description}`;
   }
 }
